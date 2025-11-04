@@ -13,39 +13,51 @@ class Solver:
         assert n == len(matrix_b), "Matrix A and B are not compatible"
         assert n == len(matrix_b[0]), "Matrix B is not square"
         assert n % bs == 0, "Matrix size is not divisible by block size"
-        mapped = []
+
+        nb = n // bs
         p = len(self.workers)
+        row_blocks_per_worker = nb // p # якщо 3 // 2 = 1 | якщо 3 // 5 = 0
+
+        mapped = []
         for i in range(p):
-            mapped.append(self.workers[i].compute(bs, matrix_a, matrix_b, i, p))
+            start_block_row = i * row_blocks_per_worker
+            if i == p - 1:
+                end_block_row = nb # тоді останній воркер бере row_block що залишився; останній воркер порахує все
+            else:
+                end_block_row = (i + 1) * row_blocks_per_worker
+
+            start_row = start_block_row * bs
+            end_row = end_block_row * bs
+            a_slice = matrix_a[start_row:end_row]
+
+            mapped.append(self.workers[i].compute(bs, a_slice, matrix_b, start_block_row, end_block_row))
         result_matrix = self.reduce(mapped, n)
         self.write_output(result_matrix)
         # print("Job Finished")
 
     @staticmethod
     @expose
-    def compute(bs, matrix_a, matrix_b, worker_id, total_workers):
-        n = len(matrix_a[0])
+    def compute(bs, a_slice, matrix_b, start_block_row, end_block_row):
+        n = len(matrix_b)
         # assert n == len(matrix_b), "Matrix A and B are not compatible"
         local_c = [[0] * n for _ in range(n)]
         nb = n // bs
-        for bi in range(nb):
+        for bi in range(start_block_row, end_block_row):
             for bj in range(nb):
-                block_index = bi * nb + bj
-                if block_index % total_workers == worker_id:
-                    for bk in range(nb):
-                        for i in range(bs):
-                            for j in range(bs):
-                                sum_val = 0
-                                for k in range(bs):
-                                    row_a = bi * bs + i
-                                    col_a = bk * bs + k
-                                    row_b = bk * bs + k
-                                    col_b = bj * bs + j
-                                    sum_val += matrix_a[row_a][col_a] * matrix_b[row_b][col_b]
+                for bk in range(nb):
+                    for i in range(bs):
+                        for j in range(bs):
+                            sum_val = 0
+                            for k in range(bs):
+                                row_a = (bi - start_block_row) * bs + i
+                                col_a = bk * bs + k
+                                row_b = bk * bs + k
+                                col_b = bj * bs + j
+                                sum_val += a_slice[row_a][col_a] * matrix_b[row_b][col_b]
 
-                                row_c = bi * bs + i
-                                col_c = bj * bs + j
-                                local_c[row_c][col_c] += sum_val
+                            row_c = bi * bs + i
+                            col_c = bj * bs + j
+                            local_c[row_c][col_c] += sum_val
         return local_c
 
 

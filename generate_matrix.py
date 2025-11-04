@@ -22,7 +22,7 @@ def generate_and_save_matrices(matrix_size, block, output_file):
 
 
 if __name__ == "__main__":
-    size = 8
-    block_size = 4
+    size = 512
+    block_size = 16
     output = "input.txt"
     generate_and_save_matrices(size, block_size, output)
