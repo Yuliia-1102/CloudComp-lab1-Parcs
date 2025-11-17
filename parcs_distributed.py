@@ -9,6 +9,7 @@ class Solver:
 
     def solve(self):
         n, bs, matrix_a, matrix_b = self.read_input()
+
         assert n == len(matrix_a[0]), "Matrix A is not square"
         assert n == len(matrix_b), "Matrix A and B are not compatible"
         assert n == len(matrix_b[0]), "Matrix B is not square"

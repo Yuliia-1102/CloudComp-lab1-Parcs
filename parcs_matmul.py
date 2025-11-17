@@ -12,7 +12,7 @@ class Solver:
         assert n == len(matrix_a[0]), "Matrix A is not square"
         assert n == len(matrix_b), "Matrix A and B are not compatible"
         assert n == len(matrix_b[0]), "Matrix B is not square"
-        assert n % bs == 0, "Matrix size is not divisible by block size"
+        assert n % bs == 0, "Matrix size isn't divisible by block size"
         mapped = []
         p = len(self.workers)
         for i in range(p):
