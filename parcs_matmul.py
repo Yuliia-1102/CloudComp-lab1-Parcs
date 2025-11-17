@@ -5,7 +5,7 @@ class Solver:
         self.input_file = input_file
         self.output_file = output_file
         self.workers = workers
-        # print("Initialized")
+        print("Initialized")
 
     def solve(self):
         n, bs, matrix_a, matrix_b = self.read_input()
