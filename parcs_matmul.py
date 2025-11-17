@@ -25,7 +25,6 @@ class Solver:
     @expose
     def compute(bs, matrix_a, matrix_b, worker_id, total_workers):
         n = len(matrix_a[0])
-        # assert n == len(matrix_b), "Matrix A and B are not compatible"
         local_c = [[0] * n for _ in range(n)]
         nb = n // bs
         for bi in range(nb):
@@ -52,7 +51,6 @@ class Solver:
     @staticmethod
     @expose
     def reduce(mapped, n):
-        # print("reduce")
         result_matrix = [[0] * n for _ in range(n)]
         for worker_result in mapped:
             mat = worker_result.value
@@ -74,4 +72,3 @@ class Solver:
             n = len(matrix_c)
             for i in range(n):
                 f.write(' '.join(str(matrix_c[i][j]) for j in range(n)) + '\n')
-        # print("output done")

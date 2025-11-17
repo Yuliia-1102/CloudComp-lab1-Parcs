@@ -5,7 +5,7 @@ class Solver:
         self.input_file = input_file
         self.output_file = output_file
         self.workers = workers
-        # print("Initialized")
+        print("Initialized")
 
     def solve(self):
         n, bs, matrix_a, matrix_b = self.read_input()
@@ -16,40 +16,39 @@ class Solver:
 
         nb = n // bs
         p = len(self.workers)
-        row_blocks_per_worker = nb // p # якщо 3 // 2 = 1 | якщо 3 // 5 = 0
+        row_blocks_per_worker = nb // p
 
         mapped = []
         for i in range(p):
-            start_block_row = i * row_blocks_per_worker
+            start_block = i * row_blocks_per_worker
             if i == p - 1:
-                end_block_row = nb # тоді останній воркер бере row_block що залишився; останній воркер порахує все
+                end_block = nb
             else:
-                end_block_row = (i + 1) * row_blocks_per_worker
+                end_block = (i + 1) * row_blocks_per_worker
 
-            start_row = start_block_row * bs
-            end_row = end_block_row * bs
+            start_row = start_block * bs
+            end_row = end_block * bs
             a_slice = matrix_a[start_row:end_row]
 
-            mapped.append(self.workers[i].compute(bs, a_slice, matrix_b, start_block_row, end_block_row))
+            mapped.append(self.workers[i].compute(bs, a_slice, matrix_b, start_block, end_block))
         result_matrix = self.reduce(mapped, n)
         self.write_output(result_matrix)
-        # print("Job Finished")
+        print("Job Finished")
 
     @staticmethod
     @expose
-    def compute(bs, a_slice, matrix_b, start_block_row, end_block_row):
+    def compute(bs, a_slice, matrix_b, start_block, end_block):
         n = len(matrix_b)
-        # assert n == len(matrix_b), "Matrix A and B are not compatible"
         local_c = [[0] * n for _ in range(n)]
         nb = n // bs
-        for bi in range(start_block_row, end_block_row):
+        for bi in range(start_block, end_block):
             for bj in range(nb):
                 for bk in range(nb):
                     for i in range(bs):
                         for j in range(bs):
                             sum_val = 0
                             for k in range(bs):
-                                row_a = (bi - start_block_row) * bs + i
+                                row_a = (bi - start_block) * bs + i
                                 col_a = bk * bs + k
                                 row_b = bk * bs + k
                                 col_b = bj * bs + j
@@ -64,7 +63,7 @@ class Solver:
     @staticmethod
     @expose
     def reduce(mapped, n):
-        # print("reduce")
+        print("reduce")
         result_matrix = [[0] * n for _ in range(n)]
         for worker_result in mapped:
             mat = worker_result.value
@@ -86,4 +85,4 @@ class Solver:
             n = len(matrix_c)
             for i in range(n):
                 f.write(' '.join(str(matrix_c[i][j]) for j in range(n)) + '\n')
-        # print("output done")
+        print("output done")
